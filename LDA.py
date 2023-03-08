@@ -59,13 +59,15 @@ class LDA:
         eigen_values, eigen_vectors = self.compute_eigens(scatter_matrix, Sb)
         projected_training = self.compute_projected_data(self.training_set, eigen_vectors)
         projected_test = self.compute_projected_data(self.test_set, eigen_vectors)
-        return Classifier.classify(projected_training, self.training_labels, projected_test, self.test_labels)
+        classifier = Classifier(1)
+        return classifier.classify(projected_training, self.training_labels, projected_test, self.test_labels)
 
 
 if __name__ == '__main__':
     training_set, training_labels, test_set, test_labels = Dataset().split_matrix()
     lda = LDA(training_set, training_labels, test_set, test_labels)
     score = lda.algorithm()
+    print(score)
 
 
 

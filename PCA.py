@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+
+from Classifier import Classifier
 from Dataset import Dataset
 class PCA:
     def init(self):
@@ -34,7 +36,11 @@ class PCA:
         return np.transpose(eigen_vectors[: idx + 1])
 
     def projected_data(self, P, training_set, test_set):
-        return np.matmul(P, training_set), np.matmul(P, test_set)
+        print("P shape")
+        print(P.shape)
+        print(training_set.shape)
+        print(test_set.shape)
+        return np.matmul(training_set, P), np.matmul(test_set, P)
 
 
 def write_mat(mat, alpha):
@@ -42,14 +48,16 @@ def write_mat(mat, alpha):
 
 
 dataset = Dataset()
-dataset.generate_matrix()
-training_set, test_set, training_labels, test_labels = dataset.split_matrix()
+training_set, training_labels, test_set, test_labels = Dataset().split_matrix()
 
 pca = PCA()
-alpha = [0.8,0.85,0.9,0.95]
+alpha = [0.95]
 
 for i in range(0, len(alpha)):
     P = pca.projection_matrix(training_set, alpha[i])
     training_set, test_set = pca.projected_data(P, training_set, test_set)
-
+    classifier = Classifier(1)
+    score = classifier.classify(training_set, training_labels, test_set, test_labels)
+    print("Score")
+    print(score)
 
