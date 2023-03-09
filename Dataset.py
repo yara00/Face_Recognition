@@ -15,15 +15,21 @@ class Dataset:
                 image_vector = np.asarray(img).flatten()
                 self.data_matrix[((sample_ctr - 1) * 10) + (img_ctr - 1)] = image_vector
                 self.labels.append(sample_ctr)
-        return self.data_matrix, self.labels
 
-    def split_matrix(self):
-        self.generate_matrix()
-        training_set = self.data_matrix[::2, :]  # odd rows for training
-        training_labels = self.labels[::2]
-        test_set = self.data_matrix[1::2, :]  # even rows for testing
-        test_labels = self.labels[1::2]
+        return self.split_matrix(self.data_matrix, self.labels)
+
+    def split_matrix(self, matrix, labels):
+        print("Data Matrix")
+        print(matrix)
+        training_set = matrix[::2, :]  # odd rows for training
+        print("Training Matrix")
+        print(training_set)
+        training_labels = labels[::2]
+        test_set = matrix[1::2, :]  # even rows for testing
+        test_labels = labels[1::2]
         return training_set, training_labels, test_set, test_labels
 
 
-
+if __name__ == '__main__':
+    d = Dataset()
+    d.generate_matrix()
