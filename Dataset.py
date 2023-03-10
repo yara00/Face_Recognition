@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 from PIL import Image
 
@@ -19,11 +18,7 @@ class Dataset:
         return self.split_matrix(self.data_matrix, self.labels)
 
     def split_matrix(self, matrix, labels):
-        print("Data Matrix")
-        print(matrix)
         training_set = matrix[::2, :]  # odd rows for training
-        print("Training Matrix")
-        print(training_set)
         training_labels = labels[::2]
         test_set = matrix[1::2, :]  # even rows for testing
         test_labels = labels[1::2]
