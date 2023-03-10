@@ -16,7 +16,7 @@ class PGM:
                     x = cv2.imread('data/natural_images/' + dir[i] + '/' + dir[i] + '_00' + str(img_ctr) + '.jpg',
                                    cv2.IMREAD_GRAYSCALE)
 
-                x = cv2.resize(x, (112, 92))
+                x = cv2.resize(x, (92, 112))
                 image_vector = x.flatten()
                 data_matrix.append(image_vector)
                 label_matrix.append(0)

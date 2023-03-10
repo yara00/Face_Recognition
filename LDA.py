@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.neighbors import KNeighborsClassifier
 
 from Classifier import Classifier
 from Dataset import Dataset
@@ -9,7 +8,7 @@ from PGM import PGM
 
 class LDA:
     def __init__(self, training_set, training_labels, test_set, test_labels, sample_size, classes):
-        self.training_set = training_set;
+        self.training_set = training_set
         self.training_labels = training_labels
         self.test_set = test_set
         self.test_labels = test_labels
@@ -19,7 +18,6 @@ class LDA:
 
     def compute_mean_vector(self):
         sample_size = self.sample_size
-        print(self.training_set.shape)
         sample_sum = self.training_set.reshape(-1, sample_size, self.training_set.shape[1]).sum(axis=1)
         self.mean_vector = sample_sum / sample_size
         print("Mean vector")
@@ -50,7 +48,6 @@ class LDA:
 
     def compute_eigens(self, scatter_matrix, Sb):
         eigen_values, eigen_vectors = np.linalg.eig(np.matmul(np.linalg.inv(scatter_matrix), Sb))
-        print("Number of eigenvectors")
         idx = np.abs(eigen_values).argsort()[::-1]
         eigen_vectors = eigen_vectors.T
         eigen_vectors = eigen_vectors[idx]
@@ -58,7 +55,7 @@ class LDA:
         return eigen_values, eigen_vectors
 
     def compute_projected_data(self, matrix, eigen_vectors):
-        return np.dot(matrix, eigen_vectors.real)
+        return np.dot(matrix, np.transpose(eigen_vectors).real)
 
     def algorithm(self):
         self.compute_mean_vector()
@@ -73,7 +70,7 @@ class LDA:
 
 if __name__ == '__main__':
     training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
-    lda = LDA(training_set, training_labels, test_set, test_labels)
+    lda = LDA(training_set, training_labels, test_set, test_labels, 5, 40)
     score = lda.algorithm()
     print("Faces LDA Score")
     print(score)
@@ -97,8 +94,3 @@ if __name__ == '__main__':
     print("Faces vs Non-Faces LDA Score")
     print(score)
 
-    clf = LinearDiscriminantAnalysis()
-    clf.fit(training_set, training_labels)
-    LinearDiscriminantAnalysis()
-    print("Faces vs Non-Faces Built-in Score")
-    print(clf.score(test_set, test_labels, sample_weight=None))
