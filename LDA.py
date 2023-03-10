@@ -46,9 +46,9 @@ class LDA:
         eigen_values, eigen_vectors = np.linalg.eigh(np.matmul(np.linalg.inv(scatter_matrix), Sb))
         eigen_vectors = eigen_vectors.T
         if self.classes == 40:
-            eigen_vectors = eigen_vectors[:39, :]       # U 39x10304
+            eigen_vectors = eigen_vectors[-39:, :]       # U 39x10304
         else:
-            eigen_vectors = eigen_vectors[:1, :]        # U 1x10304
+            eigen_vectors = eigen_vectors[-1:, :]        # U 1x10304
 
         return eigen_values, eigen_vectors
 
