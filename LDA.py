@@ -1,8 +1,8 @@
 import numpy as np
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from Classifier import Classifier
 from Dataset import Dataset
 from PGM import PGM
+import pandas as pd
 
 
 class LDA:
@@ -32,7 +32,7 @@ class LDA:
     def compute_bscatter_matrix(self):
         sample_size = self.sample_size
         overall_mean = np.mean(self.training_set, axis=0)
-        Sb = np.zeros(shape=(10304, 10304))     # Sb 10304x10304 --> between classes scatter matrix
+        Sb = np.zeros(shape=(10304, 10304))  # Sb 10304x10304 --> between classes scatter matrix
         if self.classes > 2:
             for k in range(0, self.classes):
                 delta_u = np.subtract(self.mean_vector[k], overall_mean)
@@ -50,7 +50,7 @@ class LDA:
             Zi = np.subtract(self.training_set[i * self.sample_size:(i * self.sample_size) + self.sample_size, :],
                              self.mean_vector[i])
             Si = np.matmul(np.transpose(Zi), Zi)
-            scatter_matrix = np.add(scatter_matrix, Si)     # S 10304x10304 --> within class scatter matrix
+            scatter_matrix = np.add(scatter_matrix, Si)  # S 10304x10304 --> within class scatter matrix
 
         return scatter_matrix
 
@@ -61,9 +61,9 @@ class LDA:
         eigen_vectors = eigen_vectors[:, idx]
         eigen_vectors = eigen_vectors.T
         if self.classes > 2:
-            eigen_vectors = eigen_vectors[:39, :]       # U 39x10304
+            eigen_vectors = eigen_vectors[:39, :]  # U 39x10304
         else:
-            eigen_vectors = eigen_vectors[:1, :]        # U 1x10304
+            eigen_vectors = eigen_vectors[:1, :]  # U 1x10304
 
         return eigen_values, eigen_vectors
 
@@ -80,44 +80,40 @@ class LDA:
 
         return projected_training, projected_test
 
+    def faces_vs_nonfaces(self, sample_size):
+        training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
+        matrix, labels = PGM().generate_nonface_imgs(sample_size)
+        training_set2, training_labels2, test_set2, test_labels2 = Dataset().split_matrix(np.asarray(matrix), labels)
+
+        training_set = np.concatenate((training_set, training_set2), axis=0)
+        test_set = np.concatenate((test_set, test_set2), axis=0)
+        training_labels = [1] * 200
+        training_labels = training_labels + training_labels2
+        test_labels = [1] * 200
+        test_labels = test_labels + test_labels2
+
+        lda = LDA(training_set, training_labels, test_set, test_labels, 200, 2)
+        projected_training, projected_test = lda.algorithm()
+        classifier = Classifier(1)
+        score = classifier.classify(projected_training, training_labels, projected_test, test_labels)
+        print("Faces vs Non-Faces LDA Score")
+        print(score)
+
 
 if __name__ == '__main__':
-    '''
     training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
-
     lda = LDA(training_set, training_labels, test_set, test_labels, 5, 40)
     projected_training, projected_test = lda.algorithm()
-    classifier = Classifier(1)
-    score = classifier.classify(projected_training, training_labels, projected_test, test_labels)
-    print("Faces LDA Score")
-    print(score)
 
-    clf = LinearDiscriminantAnalysis()
-    clf.fit(training_set, training_labels)
-    LinearDiscriminantAnalysis()
-    print("Faces Built-in Score")
-    print(clf.score(test_set, test_labels, sample_weight=None))
-'''
-    training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
-    matrix, labels = PGM().generate_nonface_imgs(80)
-    training_set2, training_labels2, test_set2, test_labels2 = Dataset().split_matrix(np.asarray(matrix), labels)
+    k = [1, 3, 5, 7]
+    scores = []
+    for n_neighbor in k:
+        scores.append(Classifier(n_neighbor).classify(projected_training, training_labels, projected_test, test_labels))
+    df = pd.DataFrame({
+        'K': k,
+        'scores': scores
+    })
+    print("Faces LDA Accuracy")
+    print(df)
 
-    training_set = np.concatenate((training_set, training_set2), axis=0)
-    test_set = np.concatenate((test_set, test_set2), axis=0)
-    training_labels = [1] * 200
-    training_labels = training_labels + training_labels2
-    test_labels = [1] * 200
-    test_labels = test_labels + test_labels2
-
-    lda = LDA(training_set, training_labels, test_set, test_labels, 200, 2)
-    projected_training, projected_test = lda.algorithm()
-    classifier = Classifier(1)
-    score = classifier.classify(projected_training, training_labels, projected_test, test_labels)
-    print("Faces vs Non-Faces LDA Score")
-    print(score)
-
-    clf = LinearDiscriminantAnalysis()
-    clf.fit(training_set, training_labels)
-    LinearDiscriminantAnalysis()
-    print("Faces vs Non-Faces Built-in Score")
-    print(clf.score(test_set, test_labels, sample_weight=None))
+    print(lda.faces_vs_nonfaces(80))
