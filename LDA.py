@@ -19,8 +19,8 @@ class LDA:
         sample_size = self.sample_size
         sample_sum = self.training_set.reshape(-1, sample_size, self.training_set.shape[1]).sum(axis=1)
         self.mean_vector = sample_sum / sample_size
-        # print("Mean vector")
-        # print(self.mean_vector.shape)
+      #  print("Mean vector")
+      #  print(self.mean_vector)
         return self.mean_vector
 
     def compute_bscatter_matrix(self):
@@ -44,16 +44,19 @@ class LDA:
 
     def compute_eigens(self, scatter_matrix, Sb):
         eigen_values, eigen_vectors = np.linalg.eigh(np.matmul(np.linalg.inv(scatter_matrix), Sb))
+        idx = eigen_values.argsort()[::-1]
+        eigen_values = eigen_values[idx]
+        eigen_vectors = eigen_vectors[:, idx]
         eigen_vectors = eigen_vectors.T
         if self.classes == 40:
-            eigen_vectors = eigen_vectors[-39:, :]       # U 39x10304
+            eigen_vectors = eigen_vectors[:39, :]       # U 39x10304
         else:
-            eigen_vectors = eigen_vectors[-1:, :]        # U 1x10304
+            eigen_vectors = eigen_vectors[:1, :]        # U 1x10304
 
         return eigen_values, eigen_vectors
 
     def compute_projected_data(self, matrix, eigen_vectors):
-        return np.matmul(matrix, np.transpose(eigen_vectors).real)
+        return np.matmul(matrix, np.transpose(eigen_vectors))
 
     def algorithm(self):
         self.compute_mean_vector()
