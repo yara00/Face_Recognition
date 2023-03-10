@@ -17,19 +17,31 @@ class LDA:
 
     def compute_mean_vector(self):
         sample_size = self.sample_size
-        sample_sum = self.training_set.reshape(-1, sample_size, self.training_set.shape[1]).sum(axis=1)
-        self.mean_vector = sample_sum / sample_size
-      #  print("Mean vector")
-      #  print(self.mean_vector)
+        if self.classes > 2:
+            sample_sum = self.training_set.reshape(-1, sample_size, self.training_set.shape[1]).sum(axis=1)
+            self.mean_vector = sample_sum / sample_size
+        else:
+            first_class = self.training_set[:sample_size, :]
+            second_class = self.training_set[sample_size:, :]
+            u1 = np.mean(first_class, axis=0).reshape(10304, 1)
+            u2 = np.mean(second_class, axis=0).reshape(10304, 1)
+            self.mean_vector = np.concatenate((np.transpose(u1), np.transpose(u2)), axis=0)
+
         return self.mean_vector
 
     def compute_bscatter_matrix(self):
         sample_size = self.sample_size
         overall_mean = np.mean(self.training_set, axis=0)
         Sb = np.zeros(shape=(10304, 10304))     # Sb 10304x10304 --> between classes scatter matrix
-        for k in range(0, self.classes):
-            delta_u = np.subtract(self.mean_vector[k], overall_mean)
-            Sb += sample_size * np.matmul(delta_u, np.transpose(delta_u))
+        if self.classes > 2:
+            for k in range(0, self.classes):
+                delta_u = np.subtract(self.mean_vector[k], overall_mean)
+                Sb += sample_size * np.matmul(delta_u, np.transpose(delta_u))
+        else:
+            delta_u = np.subtract(self.mean_vector[0], self.mean_vector[1])
+            delta_u = delta_u.reshape(10304, 1)
+            Sb = np.matmul(delta_u, np.transpose(delta_u))
+
         return Sb
 
     def compute_class_scatter_matrix(self):
@@ -48,7 +60,7 @@ class LDA:
         eigen_values = eigen_values[idx]
         eigen_vectors = eigen_vectors[:, idx]
         eigen_vectors = eigen_vectors.T
-        if self.classes == 40:
+        if self.classes > 2:
             eigen_vectors = eigen_vectors[:39, :]       # U 39x10304
         else:
             eigen_vectors = eigen_vectors[:1, :]        # U 1x10304
@@ -70,6 +82,7 @@ class LDA:
 
 
 if __name__ == '__main__':
+    '''
     training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
 
     lda = LDA(training_set, training_labels, test_set, test_labels, 5, 40)
@@ -84,9 +97,9 @@ if __name__ == '__main__':
     LinearDiscriminantAnalysis()
     print("Faces Built-in Score")
     print(clf.score(test_set, test_labels, sample_weight=None))
-
+'''
     training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
-    matrix, labels = PGM().generate_nonface_imgs()
+    matrix, labels = PGM().generate_nonface_imgs(80)
     training_set2, training_labels2, test_set2, test_labels2 = Dataset().split_matrix(np.asarray(matrix), labels)
 
     training_set = np.concatenate((training_set, training_set2), axis=0)
