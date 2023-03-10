@@ -1,63 +1,59 @@
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from Classifier import Classifier
 from Dataset import Dataset
+
+
 class PCA:
-    def init(self):
-        pass
+    def __init__(self, D):
+        mu = np.mean(D, axis=0)
+        Z = D - mu
+        cov_matrix = np.cov(np.transpose(Z), bias=True)
+        self.eigenvalues, self.eigenvectors = self.__eigen_sorted(cov_matrix)
 
-    def projection_matrix(self,D, alpha):
-        cov_matrix = np.cov(np.transpose(D), bias = True)
-        eigen_values, eigen_vectors = self.__eigen_sorted(cov_matrix)
-        return self.__calculate_projection_matrix(eigen_values, eigen_vectors, alpha)
-
-    def __eigen_sorted(self,matrix):
+    def __eigen_sorted(self, matrix):
         eigen_values, eigen_vectors = np.linalg.eigh(matrix)
         idx = eigen_values.argsort()[::-1]
         eigen_values = eigen_values[idx]
-        eigen_vectors = eigen_vectors[idx]
+        eigen_vectors = eigen_vectors[:, idx]
         return eigen_values, eigen_vectors
 
+    def project_data(self, training_data, test_data, alpha):
+        projection_matrix = self.__calculate_projection_matrix(alpha)
+        return np.matmul(training_data, projection_matrix), np.matmul(test_data, projection_matrix)
 
-    def __calculate_projection_matrix(self,eigen_values, eigen_vectors, alpha):
-        eigen_sum = np.sum(eigen_values)
+    def __calculate_projection_matrix(self, alpha):
+        eigen_sum = np.sum(self.eigenvalues)
         eigen_i = 0
-        idx = -1;
-        for i in eigen_values:
-            print(i , ' eigh')
+        r = 0
 
-        for i in range(0, len(eigen_values)):
-            eigen_i += eigen_values[i]
-            #print(eigen_i / eigen_sum)
+        for eigenvalue in self.eigenvalues:
+            r = r + 1
+            eigen_i += eigenvalue
             if (eigen_i / eigen_sum) >= alpha:
-                idx = i
                 break
-        return np.transpose(eigen_vectors[: idx + 1])
-
-    def projected_data(self, P, training_set, test_set):
-        print("P shape")
-        print(P.shape)
-        print(training_set.shape)
-        print(test_set.shape)
-        return np.matmul(training_set, P), np.matmul(test_set, P)
+        return self.eigenvectors[:, :r]
 
 
 def write_mat(mat, alpha):
     np.savetxt("PCA alpha = " + str(alpha) + ".txt", mat)
 
 
-dataset = Dataset()
 training_set, training_labels, test_set, test_labels = Dataset().split_matrix()
+pca = PCA(training_set)
+alpha = [0.8, 0.85, 0.9, 0.95]
 
-pca = PCA()
-alpha = [0.95]
-
-for i in range(0, len(alpha)):
-    P = pca.projection_matrix(training_set, alpha[i])
-    training_set, test_set = pca.projected_data(P, training_set, test_set)
-    classifier = Classifier(1)
-    score = classifier.classify(training_set, training_labels, test_set, test_labels)
-    print("Score")
-    print(score)
-
+for a in alpha:
+    projected_training_set, projected_test_set = pca.project_data(training_set, test_set, a)
+    neighbors = [1, 3, 5, 7]
+    scores = []
+    for neighbor in neighbors:
+        classifier = Classifier(neighbor)
+        score = classifier.classify(projected_training_set, training_labels, projected_test_set, test_labels)
+        scores.append(score)
+    print(f"alpha={a}:")
+    df = pd.DataFrame({
+        'K': neighbors,
+        'scores': scores
+    })
+    print(df)
