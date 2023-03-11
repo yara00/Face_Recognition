@@ -98,12 +98,28 @@ class LDA:
         score = classifier.classify(projected_training, training_labels, projected_test, test_labels)
         print("Faces vs Non-Faces LDA Score")
         print(score)
+        success, failed = classifier.success_failed_cases()
+        df = pd.DataFrame({
+            'Success': success,
+            'Fail': failed
+        })
+        print("Failure and Success Samples")
+        print(df)
+
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
     training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
     lda = LDA(training_set, training_labels, test_set, test_labels, 5, 40)
     projected_training, projected_test = lda.algorithm()
+
 
     k = [1, 3, 5, 7]
     scores = []
@@ -117,3 +133,4 @@ if __name__ == '__main__':
     print(df)
 
     print(lda.faces_vs_nonfaces(80))
+
