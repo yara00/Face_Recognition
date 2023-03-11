@@ -12,13 +12,14 @@ def calculate_pca_scores(training_set, training_labels, test_set, test_labels, n
     k = [1, 3, 5, 7]
     pca = PCA(training_set)
     file = open(name, "w")
-    for alpha in satisfiability:
-        projected_training_set, projected_test_set = pca.project_data(training_set, test_set, alpha)
+    for a in satisfiability:
+        projected_training_set, projected_test_set = pca.project_data(training_set, test_set, a)
         scores = []
-        print(f"alpha={alpha}:")
-        file.write(f"alpha={alpha}:\n")
+        print(f"alpha={a}:")
+        file.write(f"alpha={a}:\n")
         for n_neighbor in k:
-            scores.append(Classifier(n_neighbor).classify(projected_training_set, training_labels, projected_test_set, test_labels))
+            scores.append(Classifier(n_neighbor).classify(projected_training_set, training_labels,
+                                                          projected_test_set, test_labels))
         df = pd.DataFrame({
             'K': k,
             'scores': scores
@@ -40,16 +41,32 @@ if __name__ == '__main__':
     y_train_faces = [1] * len(y_train_faces)
     y_test_faces = [1] * len(y_test_faces)
 
-    # generate non-faces dataset
-    non_faces_dataset, non_faces_labels = PGM().generate_nonface_imgs()
-    X_train_non_faces, y_train_non_faces, X_test_non_faces, y_test_non_faces = Dataset().split_matrix(np.array(non_faces_dataset), non_faces_labels)
+    sample_sizes = [20, 40, 80, 120, 160]
+    alpha = 0.9
+    K = 1
+    accuracy = []
+    classifier = Classifier(K)
 
-    # concatenate the 2 datasets together
-    X_train = np.concatenate((X_train_faces, X_train_non_faces), axis=0)
-    y_train = y_train_faces + y_train_non_faces
-    X_test = np.concatenate((X_test_faces, X_test_non_faces), axis=0)
-    y_test = y_test_faces + y_test_non_faces
+    for sample_size in sample_sizes:
+        # generate non-faces dataset
+        non_faces_dataset, non_faces_labels = PGM().generate_nonface_imgs(sample_size)
+        X_train_non_faces, y_train_non_faces, X_test_non_faces, y_test_non_faces = \
+            Dataset().split_matrix(np.array(non_faces_dataset), non_faces_labels)
 
-    calculate_pca_scores(X_train, y_train, X_test, y_test, "PCA Faces vs. Non-faces Classification")
+        # concatenate the 2 datasets together
+        X_train = np.concatenate((X_train_faces, X_train_non_faces), axis=0)
+        y_train = y_train_faces + y_train_non_faces
+        X_test = np.concatenate((X_test_faces, X_test_non_faces), axis=0)
+        y_test = y_test_faces + y_test_non_faces
 
+        pca_reducer = PCA(X_train)
+        proj_X_train, proj_X_test = pca_reducer.project_data(X_train, X_test, alpha)
+        accuracy.append(classifier.classify(proj_X_train, y_train, proj_X_test, y_test))
 
+    summary = pd.DataFrame({
+        "Number of Non-Faces": sample_sizes,
+        "accuracy": accuracy
+    })
+    f = open("faces vs non-faces classification", "w")
+    f.write(summary.to_string())
+    f.close()
