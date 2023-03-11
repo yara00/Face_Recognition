@@ -15,17 +15,12 @@ class Classifier:
         knn = KNeighborsClassifier(n_neighbors=self.neighbours)
         knn.fit(training_set, training_labels)
         predicted = knn.predict(test_set)
-        fail = []
-        success = []
+        status = []
         for i in range(0, len(test_labels)):
             if predicted[i] != test_labels[i]:
-                fail.append(i)
+                status.append("Failed")
             else:
-                success.append(i)
-        empty = [""] * abs(len(success) - len(fail))
-        if len(success) > len(fail):
-            fail.extend(empty)
-        else:
-            success.extend(empty)
-        return success, fail
+                status.append("Succeeded")
+
+        return predicted, status
 

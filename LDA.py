@@ -80,6 +80,12 @@ class LDA:
 
         return projected_training, projected_test
 
+    def map_faces(self, x):
+        if x == 1:
+            return "Face"
+        else:
+            return "Non_Face"
+
     def faces_vs_nonfaces(self, sample_size):
         training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
         matrix, labels = PGM().generate_nonface_imgs(sample_size)
@@ -99,15 +105,15 @@ class LDA:
         print("Faces vs Non-Faces LDA Score")
         print("Training set: 200 faces & ", sample_size * 5 / 2, " non-faces")
         print(score)
-        success, failed = classifier.success_failed_cases(projected_training, training_labels, projected_test,
+        predicted, status = classifier.success_failed_cases(projected_training, training_labels, projected_test,
                                                           test_labels)
-        df = pd.DataFrame({
-            'Success': success,
-            'Fail': failed
-        })
-        print("Failure and Success Samples")
-        print(df)
 
+        df = pd.DataFrame({
+            'Labels': list(map(self.map_faces, test_labels)),
+            'Predicted': list(map(self.map_faces, predicted)),
+            'Status': status
+        })
+        df.to_csv("Succes_Fail" + str(sample_size) +".csv")
 
 if __name__ == '__main__':
     training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
@@ -127,5 +133,5 @@ if __name__ == '__main__':
     print(df)
     '''
 
-    lda.faces_vs_nonfaces(120)
-    lda.faces_vs_nonfaces(160)
+    lda.faces_vs_nonfaces(40)
+    lda.faces_vs_nonfaces(80)
