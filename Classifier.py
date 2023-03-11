@@ -19,8 +19,13 @@ class Classifier:
         success = []
         for i in range(0, len(test_labels)):
             if predicted[i] != test_labels[i]:
-                failed.append[i]
+                fail.append(i)
             else:
-                success.append[i]
+                success.append(i)
+        empty = [""] * abs(len(success) - len(fail))
+        if len(success) > len(fail):
+            fail.extend(empty)
+        else:
+            success.extend(empty)
         return success, fail
 
