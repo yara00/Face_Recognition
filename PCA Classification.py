@@ -32,41 +32,60 @@ def calculate_pca_scores(training_set, training_labels, test_set, test_labels, n
 
 if __name__ == '__main__':
 
-    # Faces Classification
-    X_train_faces, y_train_faces, X_test_faces, y_test_faces = Dataset().generate_matrix()
-    calculate_pca_scores(X_train_faces, y_train_faces, X_test_faces, y_test_faces, "PCA Faces Classification")
+    # # Faces Classification
+    # X_train_faces, y_train_faces, X_test_faces, y_test_faces = Dataset().generate_matrix()
+    # calculate_pca_scores(X_train_faces, y_train_faces, X_test_faces, y_test_faces, "PCA Faces Classification")
+    # 
+    # # Faces vs. Non-faces Classification
+    # # generate faces dataset
+    # y_train_faces = [1] * len(y_train_faces)
+    # y_test_faces = [1] * len(y_test_faces)
+    #
+    # sample_sizes = [20, 40, 80, 120, 160]
+    # alpha = 0.9
+    # K = 1
+    # accuracy = []
+    # classifier = Classifier(K)
+    #
+    # for sample_size in sample_sizes:
+    #     # generate non-faces dataset
+    #     non_faces_dataset, non_faces_labels = PGM().generate_nonface_imgs(sample_size)
+    #     X_train_non_faces, y_train_non_faces, X_test_non_faces, y_test_non_faces = \
+    #         Dataset().split_matrix(np.array(non_faces_dataset), non_faces_labels)
+    #
+    #     # concatenate the 2 datasets together
+    #     X_train = np.concatenate((X_train_faces, X_train_non_faces), axis=0)
+    #     y_train = y_train_faces + y_train_non_faces
+    #     X_test = np.concatenate((X_test_faces, X_test_non_faces), axis=0)
+    #     y_test = y_test_faces + y_test_non_faces
+    #
+    #     pca_reducer = PCA(X_train)
+    #     proj_X_train, proj_X_test = pca_reducer.project_data(X_train, X_test, alpha)
+    #     accuracy.append(classifier.classify(proj_X_train, y_train, proj_X_test, y_test))
+    #
+    # summary = pd.DataFrame({
+    #     "Number of Non-Faces": sample_sizes,
+    #     "accuracy": accuracy
+    # })
+    # f = open("faces vs non-faces classification", "w")
+    # f.write(summary.to_string())
+    # f.close()
 
-    # Faces vs. Non-faces Classification
-    # generate faces dataset
-    y_train_faces = [1] * len(y_train_faces)
-    y_test_faces = [1] * len(y_test_faces)
-
-    sample_sizes = [20, 40, 80, 120, 160]
-    alpha = 0.9
+    # BONUS: Data split into 7:3 ratio
+    training_data_7_3, training_labels_7_3, test_data_7_3, test_labels_7_3 = Dataset().generate_split_data_70_30()
+    pca_reducer = PCA(training_data_7_3)
+    alphas = [0.8, 0.85, 0.9, 0.95]
+    scores = []
     K = 1
-    accuracy = []
     classifier = Classifier(K)
-
-    for sample_size in sample_sizes:
-        # generate non-faces dataset
-        non_faces_dataset, non_faces_labels = PGM().generate_nonface_imgs(sample_size)
-        X_train_non_faces, y_train_non_faces, X_test_non_faces, y_test_non_faces = \
-            Dataset().split_matrix(np.array(non_faces_dataset), non_faces_labels)
-
-        # concatenate the 2 datasets together
-        X_train = np.concatenate((X_train_faces, X_train_non_faces), axis=0)
-        y_train = y_train_faces + y_train_non_faces
-        X_test = np.concatenate((X_test_faces, X_test_non_faces), axis=0)
-        y_test = y_test_faces + y_test_non_faces
-
-        pca_reducer = PCA(X_train)
-        proj_X_train, proj_X_test = pca_reducer.project_data(X_train, X_test, alpha)
-        accuracy.append(classifier.classify(proj_X_train, y_train, proj_X_test, y_test))
-
+    for alpha in alphas:
+        projected_training_data, projected_test_data = pca_reducer.project_data(training_data_7_3, test_data_7_3, alpha)
+        scores.append(classifier.classify(projected_training_data, training_labels_7_3,
+                                          projected_test_data, test_labels_7_3))
     summary = pd.DataFrame({
-        "Number of Non-Faces": sample_sizes,
-        "accuracy": accuracy
+        'alpha': alphas,
+        'Accuracy': scores
     })
-    f = open("faces vs non-faces classification", "w")
+    f = open("BONUS_70 30 split", "a")
+    f.write("PCA:\n")
     f.write(summary.to_string())
-    f.close()
