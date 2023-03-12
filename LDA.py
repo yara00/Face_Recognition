@@ -1,4 +1,8 @@
+import time
+
 import numpy as np
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from Classifier import Classifier
 from Dataset import Dataset
 from PGM import PGM
@@ -48,7 +52,7 @@ class LDA:
         scatter_matrix = np.zeros(shape=(10304, 10304))
         for i in range(0, self.classes):
             Zi = np.subtract(self.training_set[i * self.sample_size:(i * self.sample_size) + self.sample_size, :],
-                             self.mean_vector[i])
+                             np.transpose(self.mean_vector[i]))
             Si = np.matmul(np.transpose(Zi), Zi)
             scatter_matrix = np.add(scatter_matrix, Si)  # S 10304x10304 --> within class scatter matrix
 
@@ -106,21 +110,22 @@ class LDA:
         print("Training set: 200 faces & ", sample_size * 5 / 2, " non-faces")
         print(score)
         predicted, status = classifier.success_failed_cases(projected_training, training_labels, projected_test,
-                                                          test_labels)
+                                                            test_labels)
 
         df = pd.DataFrame({
             'Labels': list(map(self.map_faces, test_labels)),
             'Predicted': list(map(self.map_faces, predicted)),
             'Status': status
         })
-        df.to_csv("Succes_Fail" + str(sample_size) +".csv")
+        df.to_csv("Succes_Fail" + str(sample_size) + ".csv")
+
 
 if __name__ == '__main__':
-    training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
-    lda = LDA(training_set, training_labels, test_set, test_labels, 5, 40)
+
     '''
+    lda = LDA(np.asarray(training_set), training_labels, np.asarray(test_set), test_labels, 5, 40)
+
     projected_training, projected_test = lda.algorithm()
-    
     k = [1, 3, 5, 7]
     scores = []
     for n_neighbor in k:
@@ -132,6 +137,18 @@ if __name__ == '__main__':
     print("Faces LDA Accuracy")
     print(df)
     '''
+    training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
+    start = time.time()
+    clf = QuadraticDiscriminantAnalysis()
+    clf.fit(training_set, training_labels)
+    y_test = clf.predict(test_set)
+    end = time.time()
+    print("Faces QDA Score")
+    print(Classifier(1).classify(training_set, training_labels, test_set, y_test))
+    print("Time Elapsed")
+    print(end - start, " seconds")
 
+    '''
+    lda.faces_vs_nonfaces(20)
     lda.faces_vs_nonfaces(40)
-    lda.faces_vs_nonfaces(80)
+    '''
