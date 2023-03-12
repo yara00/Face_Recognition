@@ -3,6 +3,8 @@ from Classifier import Classifier
 from Dataset import Dataset
 from PGM import PGM
 import pandas as pd
+import time
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 
 class LDA:
@@ -117,7 +119,15 @@ class LDA:
 
 if __name__ == '__main__':
     training_set, training_labels, test_set, test_labels = Dataset().generate_matrix()
+    start = time.time()
     lda = LDA(training_set, training_labels, test_set, test_labels, 5, 40)
+    projected_training, projected_test = lda.algorithm()
+    end = time.time()
+    K = 1
+    classifier = Classifier(K)
+    score = classifier.classify(projected_training, training_labels, projected_test, test_labels)
+    print(f"Accuracy of LDA = {score}")
+    print(f"Time Elapsed = {end - start} seconds")
     '''
     projected_training, projected_test = lda.algorithm()
     
@@ -133,5 +143,5 @@ if __name__ == '__main__':
     print(df)
     '''
 
-    lda.faces_vs_nonfaces(40)
-    lda.faces_vs_nonfaces(80)
+    # lda.faces_vs_nonfaces(40)
+    # lda.faces_vs_nonfaces(80)
